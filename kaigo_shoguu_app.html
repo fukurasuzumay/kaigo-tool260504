@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>処遇改善加算 取得支援ツール — 訪問介護版</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #F5F4F0;
+    --surface: #FFFFFF;
+    --surface2: #F0EEE8;
+    --border: #E2DFD8;
+    --text: #1A1916;
+    --text2: #6B6860;
+    --text3: #A09D97;
+    --accent: #1B4F8A;
+    --accent-light: #E8F0FA;
+    --accent-mid: #3B77C4;
+    --green: #1A5C3A;
+    --green-light: #E6F2EC;
+    --amber: #7A4A10;
+    --amber-light: #FDF3E3;
+    --red: #8A2020;
+    --red-light: #FAEAEA;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Noto Sans JP', sans-serif;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--text);
+    color: #fff;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header .logo {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: .04em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  header .logo .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    background: rgba(255,255,255,.12);
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: .06em;
+  }
+  header .meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: rgba(255,255,255,.45);
+    letter-spacing: .04em;
+  }
+
+  /* ── LAYOUT ── */
+  .wrapper {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* ── TABS ── */
+  .tab-nav {
+    display: flex;
+    gap: 0;
+    border-bottom: 1.5px solid var(--border);
+    margin-bottom: 2rem;
+    overflow-x: auto;
+  }
+  .tab-btn {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text2);
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-bottom: 2.5px solid transparent;
+    margin-bottom: -1.5px;
+    white-space: nowrap;
+    transition: color .2s, border-color .2s;
+    letter-spacing: .02em;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── SECTION LABEL ── */
+  .sec-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .1em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: .75rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── CONTROLS ── */
+  .ctrl-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  @media (max-width: 600px) { .ctrl-grid { grid-template-columns: 1fr; } }
+  .ctrl-block label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text2);
+    margin-bottom: 6px;
+    letter-spacing: .03em;
+  }
+  select {
+    width: 100%;
+    height: 40px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 0 12px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23A09D97' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    cursor: pointer;
+  }
+  select:focus { outline: 2px solid var(--accent-mid); outline-offset: 1px; border-color: var(--accent-mid); }
+
+  .slider-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0 12px;
+  }
+  input[type=range] {
+    flex: 1;
+    height: 4px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .slider-val {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent);
+    white-space: nowrap;
+    min-width: 80px;
+    text-align: right;
+  }
+
+  /* ── METRIC CARDS ── */
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 1.25rem 0;
+  }
+  @media (max-width: 600px) { .metric-grid { grid-template-columns: repeat(2, 1fr); } }
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    text-align: center;
+  }
+  .metric.accent {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .metric-label { font-size: 10px; color: var(--text3); margin-bottom: 4px; letter-spacing: .04em; }
+  .metric.accent .metric-label { color: rgba(255,255,255,.65); }
+  .metric-value { font-family: var(--mono); font-size: 20px; font-weight: 500; color: var(--text); }
+  .metric.accent .metric-value { color: #fff; }
+  .metric-sub { font-size: 10px; color: var(--text3); margin-top: 3px; }
+  .metric.accent .metric-sub { color: rgba(255,255,255,.55); }
+
+  /* ── RANK BARS ── */
+  .rank-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-top: 1rem; }
+  .rank-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .rank-row:last-child { margin-bottom: 0; }
+  .rank-name { font-size: 11px; font-family: var(--mono); color: var(--text2); width: 60px; flex-shrink: 0; }
+  .rank-bar-wrap { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .rank-bar { height: 100%; border-radius: 4px; transition: width .4s cubic-bezier(.4,0,.2,1); }
+  .rank-pct { font-family: var(--mono); font-size: 11px; color: var(--text2); width: 48px; text-align: right; flex-shrink: 0; }
+
+  /* ── NOTE BOX ── */
+  .note {
+    background: var(--surface2);
+    border-left: 3px solid var(--border);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: .75rem 1rem;
+    margin-top: 1.25rem;
+    font-size: 11px;
+    color: var(--text2);
+    line-height: 1.7;
+  }
+  .note strong { color: var(--text); font-weight: 500; }
+
+  /* ── TASK TABLE ── */
+  .task-section { margin-bottom: 1.5rem; }
+  .task-head {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 8px 14px;
+    letter-spacing: .03em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .task-head .step-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    background: var(--accent);
+    color: #fff;
+    padding: 1px 7px;
+    border-radius: 3px;
+    letter-spacing: .06em;
+  }
+  table.task-tbl {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    overflow: hidden;
+    font-size: 12px;
+  }
+  table.task-tbl th {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text3);
+    text-align: left;
+    padding: 6px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+  table.task-tbl td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.55;
+  }
+  table.task-tbl tr:last-child td { border-bottom: none; }
+  table.task-tbl td:first-child { font-weight: 500; width: 30%; }
+  table.task-tbl td .sub { font-size: 11px; color: var(--text2); margin-top: 3px; }
+
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    font-family: var(--mono);
+    letter-spacing: .04em;
+  }
+  .b-req { background: var(--accent-light); color: var(--accent); }
+  .b-ok  { background: var(--amber-light); color: var(--amber); }
+  .b-new { background: var(--red-light); color: var(--red); }
+  .b-opt { background: var(--green-light); color: var(--green); }
+
+  /* ── TIMELINE ── */
+  .timeline { position: relative; padding-left: 1.6rem; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 6px; top: 6px; bottom: 6px;
+    width: 1px;
+    background: var(--border);
+  }
+  .tl-item { position: relative; margin-bottom: 1.4rem; }
+  .tl-dot {
+    position: absolute;
+    left: -1.6rem;
+    top: 5px;
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    border: 2px solid;
+  }
+  .tl-dot.now  { border-color: var(--accent);  background: var(--accent); }
+  .tl-dot.soon { border-color: var(--green);   background: var(--green); }
+  .tl-dot.later{ border-color: var(--text3);   background: var(--bg); }
+  .tl-time { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-bottom: 3px; letter-spacing: .04em; }
+  .tl-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .tl-body { font-size: 12px; color: var(--text2); line-height: 1.65; }
+
+  /* ── ENV GRID ── */
+  .env-section { margin-bottom: 1.25rem; }
+  .env-head {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text);
+    padding: 6px 0;
+    margin-bottom: .5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .env-num-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 1px 7px;
+    border-radius: 3px;
+    color: var(--text2);
+  }
+  .env-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  @media (max-width: 600px) { .env-grid { grid-template-columns: 1fr; } }
+  .env-item {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    font-size: 11px;
+    color: var(--text2);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    line-height: 1.5;
+  }
+  .env-item .enum {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 1px;
+    min-width: 20px;
+  }
+  .env-item.special { border-color: var(--red); background: var(--red-light); }
+  .env-item.special .enum { color: var(--red); }
+
+  /* ── PRINT ── */
+  @media print {
+    header { position: relative; }
+    .tab-nav { display: none; }
+    .tab-panel { display: block !important; page-break-before: always; }
+    .tab-panel:first-of-type { page-break-before: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    処遇改善加算 取得支援ツール
+    <span class="tag">訪問介護版</span>
+  </div>
+  <div class="meta">出典：厚生労働省 令和8年度改定対応</div>
+</header>
+
+<div class="wrapper">
+
+  <nav class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('sim', this)">加算シミュレーション</button>
+    <button class="tab-btn" onclick="switchTab('task', this)">タスク一覧</button>
+    <button class="tab-btn" onclick="switchTab('sched', this)">スケジュール</button>
+    <button class="tab-btn" onclick="switchTab('env', this)">職場環境等要件 28項目</button>
+  </nav>
+
+  <!-- ══ TAB 1: シミュレーション ══ -->
+  <div id="tab-sim" class="tab-panel active">
+
+    <p class="sec-label">条件入力 — 訪問介護事業所</p>
+    <div class="ctrl-grid">
+      <div class="ctrl-block">
+        <label>月間総報酬単位数（処遇改善加算除く）</label>
+        <div class="slider-wrap">
+          <input type="range" id="sl-u" min="50000" max="600000" step="10000" value="200000" oninput="calc()">
+          <span class="slider-val" id="o-u">200,000 単位</span>
+        </div>
+      </div>
+      <div class="ctrl-block">
+        <label>地域区分（令和6〜8年度）</label>
+        <select id="sl-r" onchange="calc()">
+          <option value="0.20">1級地 +20%（東京特別区・さいたま市・横浜市・川崎市・大阪市 等）</option>
+          <option value="0.16">2級地 +16%（東京都各市・千葉市・名古屋市・京都市・堺市 等）</option>
+          <option value="0.15" selected>3級地 +15%（千葉県・埼玉県各市・広島市・仙台市・福岡市 等）</option>
+          <option value="0.12">4級地 +12%（相模原市・岡崎市・静岡市 等）</option>
+          <option value="0.10">5級地 +10%（横須賀市・一部政令市周辺）</option>
+          <option value="0.06">6級地 +6%（その他中核市・一部市町村）</option>
+          <option value="0.03">7級地 +3%（地方の一部市町村）</option>
+          <option value="0.00">その他 0%（上記以外の地方部）</option>
+        </select>
+      </div>
+      <div class="ctrl-block">
+        <label>適用時期</label>
+        <select id="sl-t" onchange="buildRankSelect(); calc()">
+          <option value="old">令和8年4〜5月（旧体系：Ⅰ〜Ⅳ）</option>
+          <option value="new" selected>令和8年6月以降（新体系：Ⅰイ/Ⅰロ/Ⅱイ/Ⅱロ/Ⅲ/Ⅳ）</option>
+        </select>
+      </div>
+      <div class="ctrl-block">
+        <label>取得目標の加算区分</label>
+        <select id="sl-k" onchange="calc()"></select>
+      </div>
+    </div>
+
+    <p class="sec-label">月間受取見込み額</p>
+    <div class="metric-grid">
+      <div class="metric">
+        <div class="metric-label">加算単位数</div>
+        <div class="metric-value" id="r-u">—</div>
+        <div class="metric-sub">単位 / 月</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">1単位の単価</div>
+        <div class="metric-value" id="r-p">—</div>
+        <div class="metric-sub">円（人件費率 70%）</div>
+      </div>
+      <div class="metric accent">
+        <div class="metric-label">処遇改善加算額</div>
+        <div class="metric-value" id="r-tot">—</div>
+        <div class="metric-sub">円 / 月</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">うち月額賃金必須額</div>
+        <div class="metric-value" id="r-mon">—</div>
+        <div class="metric-sub">円 / 月（Ⅳ相当の 1/2）</div>
+      </div>
+    </div>
+
+    <p class="sec-label">加算区分別 加算率（訪問介護）</p>
+    <div class="rank-section" id="bars"></div>
+
+    <div class="note">
+      <strong>出典：</strong>厚生労働省「別紙１ サービス類型別加算率（令和8年4・5月、令和8年6月以降）」・「介護報酬の算定構造」<br>
+      ※令和8年6月以降、Ⅰロ・ⅡロはIT化等の特例要件（ケアプランデータ連携システム加入等）を満たした場合の上乗せ区分です。<br>
+      ※加算額は全額を職員の賃金改善に充てる必要があります。入金は翌々月中旬〜下旬。
+    </div>
+  </div>
+
+  <!-- ══ TAB 2: タスク一覧 ══ -->
+  <div id="tab-task" class="tab-panel">
+
+    <div class="task-section">
+      <div class="task-head">
+        <span class="step-badge">COMMON</span>
+        全加算共通（必須）
+      </div>
+      <table class="task-tbl">
+        <thead><tr><th>タスク</th><th>内容・根拠</th><th>区分</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>処遇改善計画書の提出</td>
+            <td>毎年2月末（近年4/15）までに指定権者（都道府県等）へ提出。加算額全額を賃金改善に充てる旨を宣言する。<div class="sub">令和7年度介護職員等処遇改善加算計画書 別紙様式２－２</div></td>
+            <td><span class="badge b-req">必須</span></td>
+          </tr>
+          <tr>
+            <td>実績報告書の提出</td>
+            <td>毎年7月末までに前年度の配分実績を提出。給与明細・賃金台帳等を保管しておく。</td>
+            <td><span class="badge b-req">必須</span></td>
+          </tr>
+          <tr>
+            <td>就業規則への処遇改善加算条項の記載</td>
+            <td>加算を原資とする手当・賞与については、制度変更時の見直し条項を就業規則に明記する。</td>
+            <td><span class="badge b-req">必須</span></td>
+          </tr>
+          <tr>
+            <td>労働関係法令の遵守・労働保険料の適正納付</td>
+            <td>労基法・最低賃金法・雇用保険法等に違反なきこと、罰金以上の刑に処せられていないことを確認する。</td>
+            <td><span class="badge b-req">必須</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="task-section">
+      <div class="task-head">
+        <span class="step-badge">STEP 1</span>
+        加算Ⅳ（基本ランク）— CP要件Ⅰ・Ⅱ ＋ 職場環境等要件 ＋ 月額賃金改善要件Ⅰ
+      </div>
+      <table class="task-tbl">
+        <thead><tr><th>タスク</th><th>内容（出典：別紙 表２－２）</th><th>区分</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>キャリアパス表・賃金体系の書面整備（CP要件Ⅰ）</td>
+            <td>職位・職責・職務内容に応じた任用要件と賃金体系を就業規則等に整備し全職員に周知。10人未満は簡易な内規でも可。<div class="sub">→ 新規開業の場合は「令和8年度中に整備する」旨の誓約でも算定可。</div></td>
+            <td><span class="badge b-ok">誓約可</span></td>
+          </tr>
+          <tr>
+            <td>研修計画の策定・実施（CP要件Ⅱ）</td>
+            <td>職員と意見交換のうえ研修計画を策定し実施。または資格取得支援（シフト調整・費用補助等）を実施。全職員に周知する。<div class="sub">→ 誓約でも可。</div></td>
+            <td><span class="badge b-ok">誓約可</span></td>
+          </tr>
+          <tr>
+            <td>職場環境等要件（各区分1つ以上・生産性向上は2つ以上）</td>
+            <td>28項目（別紙 表４）のうち、入職促進・資質向上・両立支援・健康管理・生産性向上・やりがい醸成の各区分から規定数以上の施策を実施・記録する。<div class="sub">→ 誓約でも可。</div></td>
+            <td><span class="badge b-ok">誓約可</span></td>
+          </tr>
+          <tr>
+            <td>月額賃金改善要件Ⅰ（加算Ⅳ相当の1/2以上を月額賃金で配分）</td>
+            <td>加算Ⅳ相当額の1/2以上を基本給または毎月固定の手当として支給。賞与・一時金のみへの配分は不可。令和7年3月まで猶予あり。</td>
+            <td><span class="badge b-req">必須</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="task-section">
+      <div class="task-head">
+        <span class="step-badge">STEP 2</span>
+        加算Ⅲ — 加算Ⅳの要件 ＋ CP要件Ⅲ（昇給の仕組み）
+      </div>
+      <table class="task-tbl">
+        <thead><tr><th>タスク</th><th>内容</th><th>区分</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>昇給の仕組みの整備（CP要件Ⅲ）</td>
+            <td>①勤続・経験年数に応じた昇給、②介護福祉士等の資格取得による昇給、③客観的な人事評価（実技試験・人事考課等）に基づく昇給のいずれかを就業規則に明記・全職員に周知する。<div class="sub">→ 誓約でも可。</div></td>
+            <td><span class="badge b-ok">誓約可</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="task-section">
+      <div class="task-head">
+        <span class="step-badge">STEP 3</span>
+        加算Ⅱイ — 加算Ⅲの要件 ＋ CP要件Ⅳ ＋ 職場環境等要件強化 ＋ 見える化
+      </div>
+      <table class="task-tbl">
+        <thead><tr><th>タスク</th><th>内容（出典：別紙 表２－２）</th><th>区分</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>年額440万円以上の賃金設定（CP要件Ⅳ）</td>
+            <td>経験・技能のある介護職員（介護福祉士で勤続10年以上等）のうち1名以上が改善後年額440万円以上となるよう設定。小規模・資金困難な場合は計画書に合理的理由を記載すれば例外適用可。</td>
+            <td><span class="badge b-req">必須（例外あり）</span></td>
+          </tr>
+          <tr>
+            <td>職場環境等要件の拡充（各区分2つ以上・生産性向上は3つ以上）</td>
+            <td>加算Ⅳの要件（各区分1つ以上）から、各区分2つ以上（生産性向上のみ3つ以上）に拡充する。</td>
+            <td><span class="badge b-req">必須</span></td>
+          </tr>
+          <tr>
+            <td>見える化（ホームページ等での取り組み内容の公表）</td>
+            <td>職場環境等要件の取り組み内容を介護サービス情報公表システムの「事業所の特色」欄等に具体的に記載・公表する。</td>
+            <td><span class="badge b-req">必須</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="task-section">
+      <div class="task-head">
+        <span class="step-badge">STEP 3+</span>
+        加算Ⅱロ（令和8年度新設）— 加算Ⅱイの要件 ＋ 特例要件
+      </div>
+      <table class="task-tbl">
+        <thead><tr><th>タスク</th><th>内容（出典：別紙 表１－２、表２－２）</th><th>区分</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>令和8年度特例要件（生産性向上・協働化の取組）</td>
+            <td>①ケアプランデータ連携システムへの加入（又は見込み）、②生産性向上推進体制加算ⅠまたはⅡの取得（又は見込み）、③社会福祉連携推進法人への所属のいずれかを実施する。<div class="sub">訪問介護の場合、加算Ⅱイ（24.9%）からⅡロ（26.6%）へ加算率が上昇。</div></td>
+            <td><span class="badge b-new">令和8年度新設</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="task-section">
+      <div class="task-head">
+        <span class="step-badge">STEP 4</span>
+        加算Ⅰイ — 加算Ⅱイの要件 ＋ CP要件Ⅴ（最上位）
+      </div>
+      <table class="task-tbl">
+        <thead><tr><th>タスク</th><th>内容（出典：別紙 表２－２、表３）</th><th>区分</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>特定事業所加算ⅠまたはⅡの取得（CP要件Ⅴ）</td>
+            <td>訪問介護の場合：特定事業所加算ⅠまたはⅡを取得し、訪問介護員の30%以上が介護福祉士（加算Ⅰ）または一定割合が資格者（加算Ⅱ）であることが必要。体制要件・研修要件等も充足する。</td>
+            <td><span class="badge b-req">必須</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="task-section">
+      <div class="task-head">
+        <span class="step-badge">STEP 4+</span>
+        加算Ⅰロ（令和8年度新設）— 加算Ⅰイの要件 ＋ 特例要件（最高額）
+      </div>
+      <table class="task-tbl">
+        <thead><tr><th>タスク</th><th>内容</th><th>区分</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>令和8年度特例要件（加算Ⅱロと同様）</td>
+            <td>ケアプランデータ連携システム加入等の特例要件を満たすことで、訪問介護の場合は加算Ⅰロ（28.7%）が適用される（令和8年度訪問介護の最高加算率）。</td>
+            <td><span class="badge b-new">令和8年度新設</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <strong>出典：</strong>厚生労働省「別紙 表２－２ 介護職員等処遇改善加算の算定要件（令和8年6月以降）」・「介護保険最新情報Vol.1215」・「介護職員等処遇改善加算等に関する基本的考え方並びに事務処理手順及び様式例の提示について」
+    </div>
+  </div>
+
+  <!-- ══ TAB 3: スケジュール ══ -->
+  <div id="tab-sched" class="tab-panel">
+    <p class="sec-label">開業〜安定取得までのスケジュール</p>
+    <div class="timeline">
+
+      <div class="tl-item">
+        <div class="tl-dot now"></div>
+        <div class="tl-time">開業直後〜1か月以内 ／ 最優先</div>
+        <div class="tl-title">処遇改善加算計画書の提出</div>
+        <div class="tl-body">指定権者（都道府県等）への計画書を提出し、加算算定を開始する。新規開業時はCP要件Ⅰ〜Ⅲ・職場環境等要件を「令和8年度中に整備する」旨の誓約チェックで足りる。提出月の翌々月から加算入金が開始される。</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-dot now"></div>
+        <div class="tl-time">開業後1〜3か月以内</div>
+        <div class="tl-title">就業規則・賃金規程・キャリアパス表の整備（誓約済み要件の実施）</div>
+        <div class="tl-body">職位・職責に応じたキャリアパス表と賃金体系（基本給テーブル・各種手当の支給基準）を就業規則等に明記し全職員に周知する。処遇改善加算を原資とする手当には制度変更の見直し条項を設ける。10人未満の事業所は簡易な内規でも可。</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-dot soon"></div>
+        <div class="tl-time">開業後3〜6か月以内</div>
+        <div class="tl-title">研修計画の策定・昇給の仕組みの整備</div>
+        <div class="tl-body">職員と意見交換し年間研修計画を策定する（OJT・外部研修・資格取得支援のいずれか）。あわせて、経験・資格・人事評価のいずれかに基づく昇給ルールを就業規則に明記する（加算Ⅲ取得に必要）。</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-dot soon"></div>
+        <div class="tl-time">開業後6か月以内</div>
+        <div class="tl-title">職場環境等要件の取り組み開始（28項目から選択）</div>
+        <div class="tl-body">各区分から1つ以上（生産性向上は2つ以上）を実施・記録する。例：①法人理念の明文化（入職促進①）、②業務手順書の整備（生産性向上⑳）、③5S活動（⑲）、④インカム等ICT機器導入（㉒）。小規模1事業所の場合は㉔（協働化）を1つ実施すれば生産性向上要件全体を充足できる。</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-dot later"></div>
+        <div class="tl-time">毎年2月末（近年4月15日） ／ 年次作業</div>
+        <div class="tl-title">翌年度の処遇改善加算計画書の提出（年度更新）</div>
+        <div class="tl-body">翌年度の加算継続のため計画書を提出する。前年度の配分実績を踏まえ、加算区分のランクアップを検討する。令和8年度からはⅠロ・ⅡロのIT化等特例要件（ケアプランデータ連携システム等）の取得も検討対象となる。</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-dot later"></div>
+        <div class="tl-time">毎年7月末 ／ 年次作業</div>
+        <div class="tl-title">実績報告書の提出</div>
+        <div class="tl-body">前年度の処遇改善加算の配分実績を報告する。加算額を全額配分したことを示す給与明細・賃金台帳等を整備・保管しておく。</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-dot later"></div>
+        <div class="tl-time">中長期（開業後1〜2年）</div>
+        <div class="tl-title">加算Ⅱイ〜Ⅰロへのランクアップ</div>
+        <div class="tl-body">加算Ⅱイには「年額440万円以上の職員1名設定」と「見える化（ホームページ等公表）」が追加で必要となる。加算Ⅰイ・ⅠロはCP要件Ⅴとして特定事業所加算ⅠまたはⅡの取得と介護福祉士比率の充足が必要。採用・育成計画と連動させて計画的に取り組む。</div>
+      </div>
+
+    </div>
+
+    <div class="note">
+      <strong>出典：</strong>厚生労働省「処遇改善加算の流れ」「令和7年度介護職員等処遇改善加算計画書」「別紙 表２－２（令和8年6月以降の算定要件）」<br>
+      ※加算の入金タイミング：サービス提供月の翌々月中旬〜下旬（例：4月提供→6月入金）。賃金改善実施期間は原則4月〜翌3月。
+    </div>
+  </div>
+
+  <!-- ══ TAB 4: 職場環境等要件 ══ -->
+  <div id="tab-env" class="tab-panel">
+    <p class="sec-label">職場環境等要件 28項目一覧（別紙 表４）</p>
+    <div class="note" style="margin-bottom:1.25rem">
+      <strong>加算Ⅳ：</strong>各区分1つ以上（生産性向上は2つ以上）　／　<strong>加算Ⅱ以上：</strong>各区分2つ以上（生産性向上は3つ以上）<br>
+      ※小規模1事業所のみを運営する場合、<strong>㉔を1つ実施</strong>すれば「生産性向上」の要件全体を充足できる。
+    </div>
+
+    <div class="env-section">
+      <div class="env-head"><span class="env-num-badge">①〜④</span>1. 入職促進に向けた取組</div>
+      <div class="env-grid">
+        <div class="env-item"><span class="enum">①</span><span>法人や事業所の経営理念・ケア方針・人材育成方針の施策・仕組みの明確化</span></div>
+        <div class="env-item"><span class="enum">②</span><span>事業者の共同による採用・人事ローテーション・研修のための制度構築</span></div>
+        <div class="env-item"><span class="enum">③</span><span>他産業からの転職者・主婦層・中高年齢者等にこだわらない幅広い採用（実績でも可）</span></div>
+        <div class="env-item"><span class="enum">④</span><span>職業体験の受入れや地域行事への参加・主催による職業魅力度向上の取組</span></div>
+      </div>
+    </div>
+
+    <div class="env-section">
+      <div class="env-head"><span class="env-num-badge">⑤〜⑧</span>2. 資質の向上やキャリアアップに向けた支援</div>
+      <div class="env-grid">
+        <div class="env-item"><span class="enum">⑤</span><span>介護福祉士取得支援や高度介護技術習得のためのユニットリーダー研修・ファーストステップ研修等の受講支援</span></div>
+        <div class="env-item"><span class="enum">⑥</span><span>研修受講・キャリア段位制度と人事考課との連動</span></div>
+        <div class="env-item"><span class="enum">⑦</span><span>エルダー・メンター（仕事・メンタル面のサポート担当者）制度等の導入</span></div>
+        <div class="env-item"><span class="enum">⑧</span><span>上位者・担当者によるキャリア面談など、キャリアアップに関する定期的な相談機会の確保</span></div>
+      </div>
+    </div>
+
+    <div class="env-section">
+      <div class="env-head"><span class="env-num-badge">⑨〜⑫</span>3. 両立支援・多様な働き方の推進</div>
+      <div class="env-grid">
+        <div class="env-item"><span class="enum">⑨</span><span>子育て・介護と仕事の両立のための休業制度の充実・事業所内託児施設の整備</span></div>
+        <div class="env-item"><span class="enum">⑩</span><span>勤務シフトの柔軟化・短時間正規職員制度・非正規から正規への転換制度等の整備</span></div>
+        <div class="env-item"><span class="enum">⑪</span><span>有給休暇の取得目標を定め、取得状況を定期確認し積極的な声かけを実施</span></div>
+        <div class="env-item"><span class="enum">⑫</span><span>情報共有・複数担当制等により業務の属人化・偏りを解消して有給取得を促進</span></div>
+      </div>
+    </div>
+
+    <div class="env-section">
+      <div class="env-head"><span class="env-num-badge">⑬〜⑯</span>4. 腰痛を含む心身の健康管理</div>
+      <div class="env-grid">
+        <div class="env-item"><span class="enum">⑬</span><span>業務・福利厚生・メンタルヘルス等の職員相談窓口の設置等相談体制の充実</span></div>
+        <div class="env-item"><span class="enum">⑭</span><span>短時間勤務者も受診可能な健康診断・ストレスチェック・休憩室設置等の健康管理対策</span></div>
+        <div class="env-item"><span class="enum">⑮</span><span>介護技術の修得支援・腰痛対策研修・管理者向け雇用管理改善研修等の実施</span></div>
+        <div class="env-item"><span class="enum">⑯</span><span>事故・トラブルへの対応マニュアル等の作成・体制の整備</span></div>
+      </div>
+    </div>
+
+    <div class="env-section">
+      <div class="env-head"><span class="env-num-badge">⑰〜㉔</span>5. 生産性向上（業務改善及び働く環境改善）のための取組</div>
+      <p style="font-size:11px;color:var(--text2);margin-bottom:.6rem;line-height:1.6">※加算Ⅰ・Ⅱでは⑰または⑱が必須。小規模1事業所のみ運営の場合は㉔を1つ実施することで生産性要件を単独で充足できる。</p>
+      <div class="env-grid">
+        <div class="env-item"><span class="enum">⑰</span><span>「生産性向上ガイドライン」に基づく業務改善活動の体制構築（委員会・プロジェクトチーム等）</span></div>
+        <div class="env-item"><span class="enum">⑱</span><span>現場の課題の見える化（課題抽出・構造化・業務時間調査等）の実施</span></div>
+        <div class="env-item"><span class="enum">⑲</span><span>5S活動等の実践による職場環境の整備</span></div>
+        <div class="env-item"><span class="enum">⑳</span><span>業務手順書の作成・記録報告様式の工夫による情報共有・作業負担の軽減</span></div>
+        <div class="env-item"><span class="enum">㉑</span><span>介護ソフト・タブレット・スマートフォン等の情報端末の導入（請求業務転記不要のもの）</span></div>
+        <div class="env-item"><span class="enum">㉒</span><span>介護ロボット・インカム等のICT機器（ビジネスチャット含む）の導入</span></div>
+        <div class="env-item"><span class="enum">㉓</span><span>役割分担の明確化により介護職員がケアに集中できる環境整備（介護助手等の活用）</span></div>
+        <div class="env-item special"><span class="enum">㉔</span><span>委員会の共同設置・ICTインフラ整備・人事管理システムの共通化等、協働化を通じた職場環境改善<br><strong style="font-weight:500">★小規模事業者はこれ1つで生産性要件を充足</strong></span></div>
+      </div>
+    </div>
+
+    <div class="env-section">
+      <div class="env-head"><span class="env-num-badge">㉕〜㉘</span>6. やりがい・働きがいの醸成</div>
+      <div class="env-grid">
+        <div class="env-item"><span class="enum">㉕</span><span>ミーティング等による職場内コミュニケーションの円滑化・勤務環境やケア内容の改善</span></div>
+        <div class="env-item"><span class="enum">㉖</span><span>地域の児童・生徒や住民との交流実施（地域包括ケアの一員としてのモチベーション向上）</span></div>
+        <div class="env-item"><span class="enum">㉗</span><span>介護保険・法人の理念等を定期的に学ぶ機会の提供</span></div>
+        <div class="env-item"><span class="enum">㉘</span><span>ケアの好事例・利用者や家族からの謝意等の情報を共有する機会の提供</span></div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>出典：</strong>厚生労働省「別紙 表４ 職場環境等要件」（令和8年度改定版）
+    </div>
+  </div>
+
+</div><!-- /wrapper -->
+
+<script>
+// ── Tab switching ──
+function switchTab(id, el) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+}
+
+// ── Data ──
+const RANKS_OLD = [
+  { k: 'Ⅰ',  r: 0.245, iv: 0.145, col: '#1B4F8A' },
+  { k: 'Ⅱ',  r: 0.224, iv: 0.145, col: '#2E6DAE' },
+  { k: 'Ⅲ',  r: 0.182, iv: 0.145, col: '#3B77C4' },
+  { k: 'Ⅳ',  r: 0.145, iv: 0.145, col: '#A09D97' }
+];
+const RANKS_NEW = [
+  { k: 'Ⅰロ（新）', r: 0.287, iv: 0.170, col: '#1B4F8A' },
+  { k: 'Ⅰイ',      r: 0.270, iv: 0.170, col: '#1A5C3A' },
+  { k: 'Ⅱロ（新）', r: 0.266, iv: 0.170, col: '#2E6DAE' },
+  { k: 'Ⅱイ',      r: 0.249, iv: 0.170, col: '#3B77C4' },
+  { k: 'Ⅲ',        r: 0.207, iv: 0.170, col: '#7A4A10' },
+  { k: 'Ⅳ',        r: 0.170, iv: 0.170, col: '#A09D97' }
+];
+
+function buildRankSelect() {
+  const isNew = document.getElementById('sl-t').value === 'new';
+  const ranks = isNew ? RANKS_NEW : RANKS_OLD;
+  const sel = document.getElementById('sl-k');
+  const cur = sel.value;
+  sel.innerHTML = ranks.map(r =>
+    `<option value="${r.r}">${r.k}（加算率 ${(r.r * 100).toFixed(1)}%）</option>`
+  ).join('');
+  const found = [...sel.options].find(o => o.value === cur);
+  if (found) sel.value = cur; else sel.selectedIndex = 0;
+}
+
+function calc() {
+  const u   = parseInt(document.getElementById('sl-u').value);
+  const reg = parseFloat(document.getElementById('sl-r').value);
+  const rate= parseFloat(document.getElementById('sl-k').value);
+  const isNew = document.getElementById('sl-t').value === 'new';
+  const ivRate = isNew ? 0.170 : 0.145;
+  const ranks  = isNew ? RANKS_NEW : RANKS_OLD;
+
+  document.getElementById('o-u').textContent = u.toLocaleString() + ' 単位';
+
+  const addU = Math.round(u * rate);
+  const price = +(10 + 10 * reg * 0.70).toFixed(2);
+  const tot   = Math.floor(addU * price);
+  const ivU   = Math.round(u * ivRate);
+  const mon   = Math.floor(Math.floor(ivU * price) / 2);
+
+  document.getElementById('r-u').textContent   = addU.toLocaleString();
+  document.getElementById('r-p').textContent   = price.toFixed(2);
+  document.getElementById('r-tot').textContent = tot.toLocaleString();
+  document.getElementById('r-mon').textContent = mon.toLocaleString();
+
+  const maxR = ranks[0].r;
+  document.getElementById('bars').innerHTML = ranks.map(rk => `
+    <div class="rank-row">
+      <span class="rank-name">${rk.k}</span>
+      <div class="rank-bar-wrap">
+        <div class="rank-bar" style="width:${Math.round(rk.r / maxR * 100)}%;background:${rk.r === rate ? rk.col : '#E2DFD8'}"></div>
+      </div>
+      <span class="rank-pct">${(rk.r * 100).toFixed(1)}%</span>
+    </div>`).join('');
+}
+
+// ── Init ──
+buildRankSelect();
+calc();
+</script>
+</body>
+</html>
